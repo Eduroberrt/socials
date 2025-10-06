@@ -1,0 +1,17 @@
+{
+  "folders": [
+    {
+      "name": "Django Backend", 
+      "path": "."
+    },
+    {
+      "name": "React Frontend",
+      "path": "./frontend"
+    }
+  ],
+  "settings": {
+    "typescript.preferences.includePackageJsonAutoImports": "on",
+    "typescript.suggest.autoImports": true,
+    "typescript.workspaceSymbols.scope": "allOpenProjects"
+  }
+}

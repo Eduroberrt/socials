@@ -1,0 +1,23 @@
+/* This file serves as documentation for the auth background image */
+
+/*
+Expected image: /images/auth-bg.jpg
+
+Recommended specifications:
+- Dimensions: 1920x1080 or higher
+- Format: JPG or PNG
+- Content: Professional, modern image that represents digital commerce, technology, or business
+- Color scheme: Should work well with orange branding and dark overlays
+- Style: Clean, minimalist, suitable for a marketplace/business platform
+
+Suggested image types:
+- Modern office/workspace
+- Digital technology/computers
+- Business meeting/handshake
+- Abstract geometric patterns
+- City skyline/urban scene
+- E-commerce/shopping concept
+
+The image will have a dark overlay applied, so contrast is important.
+If the image is not available, the component will fall back to a gradient background.
+*/
