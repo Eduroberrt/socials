@@ -15,16 +15,14 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, re_path
+from django.urls import path, re_path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from app.views import *
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', index, name='index'),
-    # Catch-all pattern for React Router - should be last
-    re_path(r'^.*/$', frontend_app, name='frontend_app'),
+    path('', include('app.urls')),  # Include app URLs (API + web)
 ]
 
 # Serve static files during development

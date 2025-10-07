@@ -147,16 +147,16 @@ const DashboardNavbar = () => {
             <DropdownMenu>
               <DropdownMenuTrigger className="flex items-center space-x-2 focus:outline-none">
                 <Avatar className="w-8 h-8">
-                  <AvatarImage src={user?.profilePhoto || ""} alt="Profile" />
+                  <AvatarImage src={user?.profile?.profile_photo || ""} alt="Profile" />
                   <AvatarFallback className="bg-saas-orange text-white">
-                    {user?.name?.split(' ').map(n => n[0]).join('').slice(0, 2) || 'U'}
+                    {user?.first_name?.[0]}{user?.last_name?.[0] || user?.username?.[0] || 'U'}
                   </AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56 bg-saas-darkGray border-gray-600" align="end">
                 <DropdownMenuLabel className="text-white">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium">{user?.name || 'User'}</p>
+                    <p className="text-sm font-medium">{user?.username || 'User'}</p>
                     <p className="text-xs text-gray-400">{user?.email || 'user@example.com'}</p>
                   </div>
                 </DropdownMenuLabel>

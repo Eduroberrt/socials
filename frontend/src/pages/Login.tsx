@@ -41,12 +41,12 @@ const Login = () => {
     }
 
     try {
-      const success = await login(formData.email, formData.password);
-      if (success) {
+      const result = await login(formData.email, formData.password);
+      if (result.success) {
         // Redirect to the page they were trying to access or dashboard
         navigate(from, { replace: true });
       } else {
-        setError('Invalid email or password');
+        setError(result.error || 'Invalid email or password');
       }
     } catch (error) {
       setError('Login failed. Please try again.');

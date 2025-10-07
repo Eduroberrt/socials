@@ -4,7 +4,7 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Card, CardContent, CardHeader } from './ui/card';
 import { Avatar, AvatarFallback } from './ui/avatar';
-import { Product } from '../data/mockProducts';
+import { Product } from '../services/productService';
 
 interface ProductCardProps {
   product: Product;
@@ -58,7 +58,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               >
                 {product.subcategory}
               </Badge>
-              {product.isVerified && (
+              {product.sellerVerified && (
                 <Shield className="w-4 h-4 text-green-400" />
               )}
             </div>

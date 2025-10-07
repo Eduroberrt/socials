@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import DashboardNavbar from '@/components/DashboardNavbar';
 import ProductFilters from '@/components/ProductFilters';
 import ProductCard from '@/components/ProductCard';
@@ -7,20 +7,41 @@ import MobileBottomNavigation from '@/components/MobileBottomNavigation';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X, Search, Mic, Home, ShoppingBag, Megaphone, Wallet, Filter } from 'lucide-react';
-import { mockProducts, filterProducts, getPriceRange, Product } from '@/data/mockProducts';
+import { productService, Product } from '@/services/productService';
+import { setupTestData } from '@/utils/testDataSetup';
 
 const Dashboard = () => {
   const [showAnnouncement, setShowAnnouncement] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [resetTrigger, setResetTrigger] = useState(0);
+  const [products, setProducts] = useState<Product[]>([]);
   const [filters, setFilters] = useState<{
     categories: { [key: string]: string[] };
     priceRange: [number, number];
   }>({ 
     categories: {}, 
-    priceRange: getPriceRange(mockProducts) 
+    priceRange: [0, 1000] 
   });
+
+  // Load products on component mount
+  useEffect(() => {
+    // Setup test data first (only runs once due to internal checks)
+    setupTestData();
+    
+    // Small delay to ensure test data is created
+    setTimeout(() => {
+      const approvedProducts = productService.getApprovedProducts();
+      setProducts(approvedProducts);
+      
+      // Update price range based on actual products
+      const priceRange = productService.getPriceRange(approvedProducts);
+      setFilters(prev => ({
+        ...prev,
+        priceRange
+      }));
+    }, 1100); // Wait a bit longer than test data setup
+  }, []);
   
   // Mock admin announcement data
   const announcement = {
@@ -32,42 +53,30 @@ const Dashboard = () => {
   // Filter and search products in real-time
   const filteredProducts = useMemo(() => {
     console.log('Calculating filteredProducts with filters:', JSON.stringify(filters, null, 2));
-    let products = filterProducts(mockProducts, filters);
-    console.log('After filterProducts:', products.length, 'products');
+    let filteredProducts = productService.filterProducts(products, filters);
+    console.log('After filterProducts:', filteredProducts.length, 'products');
     
     // Apply search filter
     if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
-      products = products.filter(product => 
-        product.title.toLowerCase().includes(query) ||
-        product.description.toLowerCase().includes(query) ||
-        product.subcategory.toLowerCase().includes(query) ||
-        product.seller.toLowerCase().includes(query)
-      );
-      console.log('After search filter:', products.length, 'products');
+      filteredProducts = productService.searchProducts(searchQuery, filteredProducts);
+      console.log('After search filter:', filteredProducts.length, 'products');
     }
     
     // Sort by creation date (newest first)
-    const sortedProducts = products.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    const sortedProducts = filteredProducts.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
     return sortedProducts;
-  }, [filters, searchQuery]);
+  }, [products, filters, searchQuery]);
 
   // Function to calculate filtered product count for modal
   const getFilteredProductCount = (tempFilters: typeof filters) => {
-    let products = filterProducts(mockProducts, tempFilters);
+    let filteredProducts = productService.filterProducts(products, tempFilters);
     
     // Apply search filter
     if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
-      products = products.filter(product => 
-        product.title.toLowerCase().includes(query) ||
-        product.description.toLowerCase().includes(query) ||
-        product.subcategory.toLowerCase().includes(query) ||
-        product.seller.toLowerCase().includes(query)
-      );
+      filteredProducts = productService.searchProducts(searchQuery, filteredProducts);
     }
     
-    return products.length;
+    return filteredProducts.length;
   };
 
   const handleFiltersChange = useCallback((newFilters: typeof filters) => {
@@ -177,8 +186,8 @@ const Dashboard = () => {
           <div className="hidden lg:block lg:col-span-4 xl:col-span-3">
             <ProductFilters 
               onFiltersChange={handleFiltersChange}
-              maxPrice={getPriceRange(mockProducts)[1]}
-              minPrice={getPriceRange(mockProducts)[0]}
+              maxPrice={products.length > 0 ? productService.getPriceRange(products)[1] : 1000}
+              minPrice={products.length > 0 ? productService.getPriceRange(products)[0] : 0}
               resetTrigger={resetTrigger}
             />
           </div>
@@ -221,7 +230,7 @@ const Dashboard = () => {
                         setSearchQuery('');
                         const clearedFilters = { 
                           categories: {}, 
-                          priceRange: getPriceRange(mockProducts) as [number, number]
+                          priceRange: productService.getPriceRange(products) as [number, number]
                         };
                         setFilters(clearedFilters);
                         // Trigger reset in ProductFilters component
@@ -245,8 +254,8 @@ const Dashboard = () => {
         onClose={() => setShowMobileFilters(false)}
         onFiltersChange={handleFiltersChange}
         currentFilters={filters}
-        maxPrice={getPriceRange(mockProducts)[1]}
-        minPrice={getPriceRange(mockProducts)[0]}
+        maxPrice={products.length > 0 ? productService.getPriceRange(products)[1] : 1000}
+        minPrice={products.length > 0 ? productService.getPriceRange(products)[0] : 0}
         productCount={filteredProducts.length}
         getFilteredCount={getFilteredProductCount}
       />

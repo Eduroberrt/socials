@@ -33,11 +33,13 @@ const AccountSettings = () => {
 
   // Profile form state
   const [profileData, setProfileData] = useState({
-    fullName: user?.name || '',
+    firstName: user?.first_name || '',
+    lastName: user?.last_name || '',
+    username: user?.username || '',
     email: user?.email || '',
-    phone: '',
-    bio: '',
-    location: ''
+    phone: user?.profile?.phone_number || '',
+    bio: user?.profile?.bio || '',
+    location: user?.profile?.location || ''
   });
 
   // Password form state
@@ -231,11 +233,35 @@ const AccountSettings = () => {
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div>
-                      <Label htmlFor="fullName" className="text-white">Full Name</Label>
+                      <Label htmlFor="firstName" className="text-white">First Name</Label>
                       <Input
-                        id="fullName"
-                        name="fullName"
-                        value={profileData.fullName}
+                        id="firstName"
+                        name="firstName"
+                        value={profileData.firstName}
+                        onChange={handleProfileInputChange}
+                        disabled={!isEditing}
+                        className="mt-1 bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-400 focus:border-saas-orange disabled:opacity-50"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="lastName" className="text-white">Last Name</Label>
+                      <Input
+                        id="lastName"
+                        name="lastName"
+                        value={profileData.lastName}
+                        onChange={handleProfileInputChange}
+                        disabled={!isEditing}
+                        className="mt-1 bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-400 focus:border-saas-orange disabled:opacity-50"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="username" className="text-white">Username</Label>
+                      <Input
+                        id="username"
+                        name="username"
+                        value={profileData.username}
                         onChange={handleProfileInputChange}
                         disabled={!isEditing}
                         className="mt-1 bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-400 focus:border-saas-orange disabled:opacity-50"
@@ -324,11 +350,13 @@ const AccountSettings = () => {
                       onClick={() => {
                         setIsEditing(false);
                         setProfileData({
-                          fullName: user?.name || '',
+                          firstName: user?.first_name || '',
+                          lastName: user?.last_name || '',
+                          username: user?.username || '',
                           email: user?.email || '',
-                          phone: '',
-                          bio: '',
-                          location: ''
+                          phone: user?.profile?.phone_number || '',
+                          bio: user?.profile?.bio || '',
+                          location: user?.profile?.location || ''
                         });
                       }}
                       variant="outline"
@@ -347,9 +375,9 @@ const AccountSettings = () => {
                     {/* Current Avatar Display */}
                     <div className="relative">
                       <Avatar className="h-24 w-24">
-                        <AvatarImage src={user?.profilePhoto || ""} alt="Profile" />
+                        <AvatarImage src={user?.profile?.profile_photo || ""} alt="Profile" />
                         <AvatarFallback className="bg-saas-orange text-white text-xl">
-                          {user?.name?.split(' ').map(n => n[0]).join('').slice(0, 2) || 'U'}
+                          {user?.first_name?.[0]}{user?.last_name?.[0]}
                         </AvatarFallback>
                       </Avatar>
                       

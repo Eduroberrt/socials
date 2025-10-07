@@ -20,7 +20,9 @@ const SignUp = () => {
   const [referralCode, setReferralCode] = useState('');
   const [referralValid, setReferralValid] = useState<boolean | null>(null);
   const [formData, setFormData] = useState({
-    fullName: '',
+    username: '',
+    first_name: '',
+    last_name: '',
     email: '',
     phoneNumber: '',
     password: '',
@@ -76,21 +78,24 @@ const SignUp = () => {
       return;
     }
 
-    if (!formData.fullName || !formData.email || !formData.password) {
+    if (!formData.username || !formData.first_name || !formData.last_name || !formData.email || !formData.password) {
       setError('Please fill in all required fields');
       return;
     }
 
     try {
       // Sign up user with auth context
-      const success = await signup(
-        formData.email, 
-        formData.password, 
-        formData.fullName, 
-        referralCode || undefined
-      );
+      const result = await signup({
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+        password_confirm: formData.confirmPassword,
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        referral_code: referralCode || undefined
+      });
 
-      if (success) {
+      if (result.success) {
         // Create new user ID for referral system
         const newUserId = `user_${Date.now()}`;
         
@@ -108,7 +113,7 @@ const SignUp = () => {
         // Redirect to dashboard
         navigate('/dashboard');
       } else {
-        setError('Signup failed. Please try again.');
+        setError(result.error || 'Signup failed. Please try again.');
       }
     } catch (error) {
       setError('Signup failed. Please try again.');
@@ -175,17 +180,47 @@ const SignUp = () => {
 
           {/* Signup Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Full Name */}
+            {/* Username */}
             <div className="space-y-2">
-              <Label htmlFor="fullName" className="text-white">Full Name</Label>
+              <Label htmlFor="username" className="text-white">Username</Label>
               <Input
-                id="fullName"
-                name="fullName"
+                id="username"
+                name="username"
                 type="text"
-                value={formData.fullName}
+                value={formData.username}
                 onChange={handleInputChange}
                 className="bg-saas-darkGray border-gray-600 text-white placeholder-gray-400 focus:border-saas-orange"
-                placeholder="Enter your full name"
+                placeholder="Enter your username"
+                required
+              />
+            </div>
+
+            {/* First Name */}
+            <div className="space-y-2">
+              <Label htmlFor="first_name" className="text-white">First Name</Label>
+              <Input
+                id="first_name"
+                name="first_name"
+                type="text"
+                value={formData.first_name}
+                onChange={handleInputChange}
+                className="bg-saas-darkGray border-gray-600 text-white placeholder-gray-400 focus:border-saas-orange"
+                placeholder="Enter your first name"
+                required
+              />
+            </div>
+
+            {/* Last Name */}
+            <div className="space-y-2">
+              <Label htmlFor="last_name" className="text-white">Last Name</Label>
+              <Input
+                id="last_name"
+                name="last_name"
+                type="text"
+                value={formData.last_name}
+                onChange={handleInputChange}
+                className="bg-saas-darkGray border-gray-600 text-white placeholder-gray-400 focus:border-saas-orange"
+                placeholder="Enter your last name"
                 required
               />
             </div>

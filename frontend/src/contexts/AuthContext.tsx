@@ -1,20 +1,38 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { authService } from '../services/authService';
 
 interface User {
   id: string;
+  username: string;
   email: string;
-  name: string;
-  profilePhoto?: string;
+  first_name: string;
+  last_name: string;
+  profile?: {
+    phone_number?: string;
+    bio?: string;
+    location?: string;
+    is_verified: boolean;
+    profile_photo?: string;
+  };
   isAuthenticated: boolean;
 }
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<boolean>;
-  signup: (email: string, password: string, name: string, referralCode?: string) => Promise<boolean>;
-  logout: () => void;
-  updateProfilePhoto: (photoUrl: string) => void;
+  login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  signup: (userData: {
+    username: string;
+    email: string;
+    password: string;
+    password_confirm: string;
+    first_name: string;
+    last_name: string;
+    referral_code?: string;
+  }) => Promise<{ success: boolean; error?: string }>;
+  logout: () => Promise<void>;
+  updateProfilePhoto: (photoUrl: string) => Promise<void>;
   isLoading: boolean;
+  error: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -30,113 +48,122 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Check if user is logged in on mount
   useEffect(() => {
-    const storedUser = localStorage.getItem('acctthrive_user');
-    if (storedUser) {
+    const checkAuthStatus = async () => {
+      setIsLoading(true);
       try {
-        const userData = JSON.parse(storedUser);
-        setUser({
-          ...userData,
-          isAuthenticated: true
-        });
+        const { user: currentUser } = await authService.getCurrentUser();
+        if (currentUser) {
+          setUser({
+            ...currentUser,
+            isAuthenticated: true
+          });
+        }
       } catch (error) {
-        console.error('Error parsing stored user data:', error);
-        localStorage.removeItem('acctthrive_user');
+        console.error('Auth check failed:', error);
+      } finally {
+        setIsLoading(false);
       }
-    }
-    setIsLoading(false);
+    };
+
+    checkAuthStatus();
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    setError(null);
     setIsLoading(true);
     
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock authentication - in production, this would call your API
-      if (email && password) {
-        const userData = {
-          id: `user_${Date.now()}`,
-          email,
-          name: email.split('@')[0], // Simple name extraction
+      const result = await authService.login({ username, password });
+      if (result.user) {
+        setUser({
+          ...result.user,
           isAuthenticated: true
-        };
-        
-        setUser(userData);
-        localStorage.setItem('acctthrive_user', JSON.stringify(userData));
-        setIsLoading(false);
-        return true;
+        });
+        return { success: true };
+      } else {
+        const errorMessage = result.error || 'Login failed';
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
       }
-      
-      setIsLoading(false);
-      return false;
     } catch (error) {
-      console.error('Login error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Login failed';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
       setIsLoading(false);
-      return false;
     }
   };
 
-  const signup = async (email: string, password: string, name: string, referralCode?: string): Promise<boolean> => {
+  const signup = async (userData: {
+    username: string;
+    email: string;
+    password: string;
+    password_confirm: string;
+    first_name: string;
+    last_name: string;
+    referral_code?: string;
+  }): Promise<{ success: boolean; error?: string }> => {
+    setError(null);
     setIsLoading(true);
     
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock signup - in production, this would call your API
-      if (email && password && name) {
-        const userData = {
-          id: `user_${Date.now()}`,
-          email,
-          name,
+      const result = await authService.register(userData);
+      if (result.user) {
+        setUser({
+          ...result.user,
           isAuthenticated: true
-        };
-        
-        // If referral code provided, process it
-        if (referralCode) {
-          // This would typically be handled by your backend
-          console.log('Processing referral code:', referralCode);
-        }
-        
-        setUser(userData);
-        localStorage.setItem('acctthrive_user', JSON.stringify(userData));
-        setIsLoading(false);
-        return true;
+        });
+        return { success: true };
+      } else {
+        const errorMessage = result.error || 'Registration failed';
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
       }
-      
-      setIsLoading(false);
-      return false;
     } catch (error) {
-      console.error('Signup error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Registration failed';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
       setIsLoading(false);
-      return false;
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('acctthrive_user');
+  const logout = async (): Promise<void> => {
+    try {
+      await authService.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setUser(null);
+      setError(null);
+    }
   };
 
-  const updateProfilePhoto = (photoUrl: string) => {
+  const updateProfilePhoto = async (photoUrl: string): Promise<void> => {
     if (user) {
-      const updatedUser = { ...user, profilePhoto: photoUrl };
+      const updatedUser = {
+        ...user,
+        profile: {
+          ...user.profile,
+          profile_photo: photoUrl
+        }
+      };
       setUser(updatedUser);
-      localStorage.setItem('acctthrive_user', JSON.stringify(updatedUser));
     }
   };
 
-  const value = {
+  const value: AuthContextType = {
     user,
     login,
     signup,
     logout,
     updateProfilePhoto,
-    isLoading
+    isLoading,
+    error
   };
 
   return (

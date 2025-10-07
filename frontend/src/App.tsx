@@ -13,6 +13,8 @@ import Referrals from "./pages/Referrals";
 import Wallet from "./pages/Wallet";
 import ReferralTest from "./pages/ReferralTest";
 import AccountSettings from "./pages/AccountSettings";
+import SellProduct from "./pages/SellProduct";
+import AdminDashboard from "./pages/AdminDashboard";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +52,16 @@ const App = () => (
             <Route path="/dashboard/settings" element={
               <ProtectedRoute>
                 <AccountSettings />
+              </ProtectedRoute>
+            } />
+            <Route path="/dashboard/sell" element={
+              <ProtectedRoute>
+                <SellProduct />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin" element={
+              <ProtectedRoute>
+                <AdminDashboard />
               </ProtectedRoute>
             } />
           </Routes>
